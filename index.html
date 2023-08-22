@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>三国杀语音小助手</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f7f7;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content:space-around;
+        align-items: center;
+        height: 100vh;
+        background-image: url('desktop-background.jpg'); /* 添加背景图 */
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+      }
+
+
+      /* 手机端的样式（使用不同的背景图片） */
+      @media (max-width: 768px) {
+        body {
+          background-image: url('mobile-background.jpeg');
+        }
+      }
+
+      #container {
+        text-align: center;
+        padding: 20px;
+        border-radius: 10px;
+        background-color: rgba(255, 255, 255, 0.9); /* 添加半透明白色背景 */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3); /* 添加阴影 */
+      }
+  
+      input[type="text"] {
+        padding: 10px;
+        width: 180px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        margin-right: 10px;
+      }
+  
+      button {
+        margin: 10px;
+        padding: 6px 15px;
+        font-size: 14px;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease; /* 添加按钮动画 */
+      }
+  
+      button:hover {
+        background-color: #0056b3; /* 鼠标悬停时变色 */
+      }
+
+      /* 根据用户输入内容生成的按钮样式 */
+      .button-group button {
+        margin: 5px;
+        padding: 6px 12px;
+        font-size: 12px;
+        background-color: #e0e0e0;
+        color: #333;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .button-group button:hover {
+        background-color: #ccc;
+      }
+  
+      audio {
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      .top-banner {
+        font-size: xx-large;
+        text-align: center;
+        padding: 10px;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: rgb(100, 100, 100); /* 更低调的颜色 */
+        line-height: 1.5;
+        transition: background-color 0.3s ease;
+      }
+
+      .top-banner:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+    </style>
+  </head>
+<body>
+  <div class="top-banner">
+    <p>三国杀语音小助手</p>
+  </div>
+
+  <div id="container">
+    <input type="text" id="searchInput" placeholder="输入技能名（拼音）">
+    <button id="searchButton">麦克风</button>
+    <div id="audioOptions" class="button-group"></div>
+    <p id="feedbackMessage" style="color: red;"></p>
+  </div>
+
+  <div>
+    <a href="https://space.bilibili.com/13926662" target="_blank" style="color:rgb(5, 173, 245);font-size: medium;">关注路人丁喵，关注路人丁谢谢喵</a>
+  </div>
+
+  <script>
+    const searchButton = document.getElementById('searchButton');
+    const searchInput = document.getElementById('searchInput');
+    const audioOptions = document.getElementById('audioOptions');
+    const feedbackMessage = document.getElementById('feedbackMessage');
+    const audioPlayers = {}; // 用于保存多个搜索关键词对应的音频播放器数组
+
+    searchButton.addEventListener('click', async () => {
+      const userInput = searchInput.value.trim().toLowerCase(); // 获取用户输入的内容并转换为小写
+
+      if (userInput !== '') {
+        feedbackMessage.textContent = '';
+        const matchNames = []
+
+        fetch('http://121.4.56.76:54128/skillnames',{node:'no-cors'})
+          .then(response => response.json())
+          .then(skillnames => {
+            for (const skillname of skillnames){
+              if (skillname.search(userInput)!=-1){
+                matchNames.push(skillname)
+              }
+            }
+            if (matchNames.length==0){
+              feedbackMessage.textContent = '抱歉，没有找到相应的技能台词。';
+            }
+            else{
+
+              if (!audioPlayers[userInput]) {
+                const buttonGroup = document.createElement('div');
+                buttonGroup.className = 'button-group'; // 添加样式类
+
+                audioPlayers[userInput] = {
+                  buttonGroup: buttonGroup,
+                  players: []
+                };
+
+                audioOptions.appendChild(buttonGroup); // 将按钮组添加到音频选项中
+
+                for (const matchName of matchNames) {
+                  const audioOption = document.createElement('button');
+                  audioOption.textContent = matchName; // 显示文件名
+                  audioPlayers[userInput].buttonGroup.appendChild(audioOption);
+
+                  // 创建一个新的音频播放器
+                  const audioPlayer = new Audio();
+                  audioPlayer.src = 'http://121.4.56.76:54128/skill/'+matchName+'.mp3';
+                  audioPlayers[userInput].players.push(audioPlayer);
+
+                  audioOption.addEventListener('click', () => {
+                    feedbackMessage.textContent = ''; // 清空之前的反馈消息
+                    audioPlayer.play(); // 播放音频
+                        });
+                }
+              }
+            }
+          })
+      }
+    });
+  </script>
+</body>
+</html>
